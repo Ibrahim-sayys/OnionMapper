@@ -24,7 +24,11 @@ def extract_keywords(text, num_keywords=10):
 
 # Function to process URLs from input CSV and write results to output CSV
 def process_urls(input_csv, output_csv):
-    # Handle BOM in input CSV
+    # Ensure the input file exists
+    if not os.path.exists(input_csv):
+        print(f"Error: Input file '{input_csv}' not found! Please provide a valid input file.")
+        return
+
     with open(input_csv, 'r', encoding='utf-8-sig') as infile, open(output_csv, 'w', encoding='utf-8', newline='') as outfile:
         csv_reader = csv.reader(infile)
         csv_writer = csv.writer(outfile)
@@ -53,24 +57,20 @@ def process_urls(input_csv, output_csv):
                     csv_writer.writerow([url, keywords_str])
                 else:
                     print(f"Failed to fetch {url}: HTTP {response.status_code}")
-                    csv_writer.writerow([url, f"Failed: HTTP {response.status_code}"])
+                    # Write fallback keywords for HTTP errors
+                    fallback_keywords_str = 'down(1), offline(1), not reachable(1)'
+                    csv_writer.writerow([url, fallback_keywords_str])
             except requests.exceptions.RequestException as e:
-                print(f"Error processing {url}: {e}")
-                csv_writer.writerow([url, f"Error: {e}"])
+
+                # Write fallback keywords for connection errors
+                fallback_keywords_str = 'down(1), offline(1), not reachable(1)'
+                csv_writer.writerow([url, fallback_keywords_str])
 
 if __name__ == "__main__":
     # Define input and output CSV file paths
-    input_csv = "input_url.csv"
+    input_csv = "input_url.csv"  # Ensure this file exists
     output_csv = "output_keywords.csv"
 
-    # Check if input file exists
-    if not os.path.exists(input_csv):
-        print(f"Error: Input file '{input_csv}' not found!")
-        # Create a sample input file as fallback
-        with open(input_csv, 'w', encoding='utf-8') as f:
-            f.write("http://example1.onion/\nhttp://example2.onion/")  # Add sample URLs
-        print(f"Sample input file created at '{input_csv}'. Please add URLs to this file and rerun the script.")
-    else:
-        # Process URLs and extract keywords
-        process_urls(input_csv, output_csv)
-        print(f"Keyword extraction completed. Results saved to {output_csv}.")
+    # Process URLs and extract keywords
+    process_urls(input_csv, output_csv)
+    print(f"Keyword extraction completed. Results saved to {output_csv}.")
