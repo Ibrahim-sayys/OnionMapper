@@ -55,12 +55,14 @@ def process_urls(input_csv, output_csv):
         csv_writer = csv.writer(outfile)
 
         # Write header row to the output CSV
-        csv_writer.writerow(['URL', 'Keywords'])
+        header = next(csv_reader)  # Read the header row
+        csv_writer.writerow(header)  # Write the header row as-is
 
         # Process each URL in the input CSV
         for index, row in enumerate(csv_reader, start=1):  # Add a counter with enumerate
-            url = row[0].strip()
+            url = row[0].strip()  # First column: URL
             if not url:  # Skip empty rows
+                csv_writer.writerow(row)  # Write the row as-is if URL is missing
                 continue
 
             print(f"Processing link #{index}: {url}")  # Output the link number
@@ -74,17 +76,15 @@ def process_urls(input_csv, output_csv):
                     keywords = extract_keywords(clean_text, num_keywords=10)
 
                     # Join keywords into a comma-separated string
-                    keywords_str = ', '.join(keywords)
-                    csv_writer.writerow([url, keywords_str])
+                    row[1] = ', '.join(keywords)  # Add keywords to the second column
                 else:
                     print(f"Failed to fetch {url}: HTTP {response.status_code}")
-                    # Write fallback keywords for HTTP errors
-                    fallback_keywords_str = 'down, offline, not reachable'
-                    csv_writer.writerow([url, fallback_keywords_str])
+                    row[1] = 'down, offline, not reachable'  # Fallback keywords for HTTP errors
             except requests.exceptions.RequestException as e:
-                # Write fallback keywords for connection errors
-                fallback_keywords_str = 'down, offline, not reachable'
-                csv_writer.writerow([url, fallback_keywords_str])
+                # Fallback keywords for connection errors
+                row[1] = 'down, offline, not reachable'
+
+            csv_writer.writerow(row)  # Write the updated row to the output CSV
 
 
 if __name__ == "__main__":
