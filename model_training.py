@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
+from catboost import CatBoostClassifier
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE, RandomOverSampler
@@ -83,7 +84,7 @@ def visualize_class_distribution(y, title):
     plt.xlabel("Class")
     plt.ylabel("Count")
     plt.xticks(rotation=45)
-    plt.show()
+    #plt.show()
 
 # Function to train Random Forest
 def train_random_forest(X, y):
@@ -103,6 +104,24 @@ def train_logistic_regression(X, y):
 
     evaluate_model(classifier, X_test, y_test, "logistic_regression.pkl")
 
+# Function to train XGBoost
+def train_xgboost(X, y):
+    print("\nTraining the XGBoost Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = XGBClassifier(random_state=42, n_estimators=100, learning_rate=0.1, max_depth=6)
+    classifier.fit(X_train, y_train)
+
+    evaluate_model(classifier, X_test, y_test, "xgboost.pkl")
+
+# Function to train CatBoost
+def train_catboost(X, y):
+    print("\nTraining the CatBoost Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = CatBoostClassifier(random_state=42, iterations=100, learning_rate=0.1, depth=6, verbose=False)  # Use 'False' instead of 0
+    classifier.fit(X_train, y_train)
+
+    evaluate_model(classifier, X_test, y_test, "catboost.pkl")
+
 # Function to evaluate the model
 def evaluate_model(classifier, X_test, y_test, model_filename):
     print("\nEvaluating the model...")
@@ -116,20 +135,11 @@ def evaluate_model(classifier, X_test, y_test, model_filename):
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot(cmap=plt.cm.Blues, xticks_rotation=45)
     plt.title("Confusion Matrix")
-    plt.show()
+    #plt.show()
 
     # Save the trained model
     joblib.dump(classifier, model_filename)
     print(f"\nModel saved as {model_filename}.")
-
-# Function to train XGBoost
-def train_xgboost(X, y):
-    print("\nTraining the XGBoost Classifier...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    classifier = XGBClassifier(random_state=42, n_estimators=100, learning_rate=0.1, max_depth=6)
-    classifier.fit(X_train, y_train)
-
-    evaluate_model(classifier, X_test, y_test, "xgboost.pkl")
 
 # Main function
 if __name__ == "__main__":
@@ -144,7 +154,8 @@ if __name__ == "__main__":
     print("[1] Random Forest")
     print("[2] Logistic Regression")
     print("[3] XGBoost")
-    choice = input("Enter 1, 2, or 3: ").strip()
+    print("[4] CatBoost")
+    choice = input("Enter 1, 2, 3 or 4: ").strip()
 
     if choice == "1":
         train_random_forest(X_balanced, y_balanced)
@@ -152,6 +163,8 @@ if __name__ == "__main__":
         train_logistic_regression(X_balanced, y_balanced)
     elif choice == "3":
         train_xgboost(X_balanced, y_balanced)
+    elif choice == "4":
+        train_catboost(X_balanced, y_balanced)
     else:
         print("Invalid choice. Exiting...")
         exit()
