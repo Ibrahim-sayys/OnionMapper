@@ -4,6 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from xgboost import XGBClassifier
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE, RandomOverSampler
@@ -13,11 +14,13 @@ import joblib
 def preprocess_data(input_csv):
     print("Loading dataset...")
     data = pd.read_csv(input_csv)
+    print(data)
 
     # Drop the 'Urls' column
     if 'Urls' in data.columns:
         print("Dropping the 'Urls' column")
         data.drop(columns=['Urls'], inplace=True)
+        print(data)
 
     # Shuffle the dataset to randomize the rows
     print("Shuffling the dataset...")
@@ -119,6 +122,15 @@ def evaluate_model(classifier, X_test, y_test, model_filename):
     joblib.dump(classifier, model_filename)
     print(f"\nModel saved as {model_filename}.")
 
+# Function to train XGBoost
+def train_xgboost(X, y):
+    print("\nTraining the XGBoost Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = XGBClassifier(random_state=42, n_estimators=100, learning_rate=0.1, max_depth=6)
+    classifier.fit(X_train, y_train)
+
+    evaluate_model(classifier, X_test, y_test, "xgboost.pkl")
+
 # Main function
 if __name__ == "__main__":
     # Input CSV file path
@@ -131,12 +143,15 @@ if __name__ == "__main__":
     print("\nWhich model would you like to train?")
     print("[1] Random Forest")
     print("[2] Logistic Regression")
-    choice = input("Enter 1 or 2: ").strip()
+    print("[3] XGBoost")
+    choice = input("Enter 1, 2, or 3: ").strip()
 
     if choice == "1":
         train_random_forest(X_balanced, y_balanced)
     elif choice == "2":
         train_logistic_regression(X_balanced, y_balanced)
+    elif choice == "3":
+        train_xgboost(X_balanced, y_balanced)
     else:
         print("Invalid choice. Exiting...")
         exit()

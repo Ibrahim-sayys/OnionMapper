@@ -8,3 +8,4 @@ joblib~=1.5.0
 scikit-learn~=1.6.1
 imbalanced-learn~=0.13.0
 matplotlib~=3.10.3
+xgboost~=1.7.6
