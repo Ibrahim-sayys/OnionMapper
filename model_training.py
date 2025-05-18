@@ -2,8 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.naive_bayes import MultinomialNB
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
@@ -15,13 +15,11 @@ import joblib
 def preprocess_data(input_csv):
     print("Loading dataset...")
     data = pd.read_csv(input_csv)
-    print(data)
 
     # Drop the 'Urls' column
     if 'Urls' in data.columns:
         print("Dropping the 'Urls' column")
         data.drop(columns=['Urls'], inplace=True)
-        print(data)
 
     # Shuffle the dataset to randomize the rows
     print("Shuffling the dataset...")
@@ -95,14 +93,14 @@ def train_random_forest(X, y):
 
     evaluate_model(classifier, X_test, y_test, "random_forest.pkl")
 
-# Function to train Logistic Regression
-def train_logistic_regression(X, y):
-    print("\nTraining the Logistic Regression Classifier...")
+# Function to train Naive Bayes
+def train_naive_bayes(X, y):
+    print("\nTraining the Naive Bayes Classifier...")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    classifier = LogisticRegression(random_state=42, max_iter=1000)
+    classifier = MultinomialNB()  # Multinomial Naive Bayes for text data
     classifier.fit(X_train, y_train)
 
-    evaluate_model(classifier, X_test, y_test, "logistic_regression.pkl")
+    evaluate_model(classifier, X_test, y_test, "naive_bayes.pkl")
 
 # Function to train XGBoost
 def train_xgboost(X, y):
@@ -121,6 +119,21 @@ def train_catboost(X, y):
     classifier.fit(X_train, y_train)
 
     evaluate_model(classifier, X_test, y_test, "catboost.pkl")
+
+# Function to train Stochastic Gradient Boosting
+def train_stochastic_gradient_boosting(X, y):
+    print("\nTraining the Stochastic Gradient Boosting Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = GradientBoostingClassifier(
+        n_estimators=100,
+        learning_rate=0.1,
+        max_depth=3,
+        subsample=0.8,  # Enables stochastic behavior
+        random_state=42
+    )
+    classifier.fit(X_train, y_train)
+
+    evaluate_model(classifier, X_test, y_test, "stochastic_gradient_boosting.pkl")
 
 # Function to evaluate the model
 def evaluate_model(classifier, X_test, y_test, model_filename):
@@ -152,19 +165,22 @@ if __name__ == "__main__":
     # Ask the user which model to train
     print("\nWhich model would you like to train?")
     print("[1] Random Forest")
-    print("[2] Logistic Regression")
+    print("[2] Naive Bayes")
     print("[3] XGBoost")
     print("[4] CatBoost")
-    choice = input("Enter 1, 2, 3 or 4: ").strip()
+    print("[5] Stochastic Gradient Boosting")  # Added this option
+    choice = input("Enter 1, 2, 3, 4 or 5: ").strip()
 
     if choice == "1":
         train_random_forest(X_balanced, y_balanced)
     elif choice == "2":
-        train_logistic_regression(X_balanced, y_balanced)
+        train_naive_bayes(X_balanced, y_balanced)
     elif choice == "3":
         train_xgboost(X_balanced, y_balanced)
     elif choice == "4":
         train_catboost(X_balanced, y_balanced)
+    elif choice == "5":
+        train_stochastic_gradient_boosting(X_balanced, y_balanced)
     else:
         print("Invalid choice. Exiting...")
         exit()
