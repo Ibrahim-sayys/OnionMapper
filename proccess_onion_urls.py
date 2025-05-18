@@ -85,7 +85,7 @@ def process_urls(input_csv, output_csv):
                 row[1] = 'down, offline, not reachable'
 
             csv_writer.writerow(row)  # Write the updated row to the output CSV
-
+    
 
 if __name__ == "__main__":
     # Define input and output CSV file paths

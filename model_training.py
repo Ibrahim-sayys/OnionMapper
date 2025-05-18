@@ -1,0 +1,142 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.preprocessing import LabelEncoder
+from imblearn.over_sampling import SMOTE, RandomOverSampler
+import joblib
+
+# Function to preprocess the dataset
+def preprocess_data(input_csv):
+    print("Loading dataset...")
+    data = pd.read_csv(input_csv)
+
+    # Drop the 'Urls' column
+    if 'Urls' in data.columns:
+        print("Dropping the 'Urls' column")
+        data.drop(columns=['Urls'], inplace=True)
+
+    # Shuffle the dataset to randomize the rows
+    print("Shuffling the dataset...")
+    data = data.sample(frac=1, random_state=42).reset_index(drop=True)
+
+    # Drop rows where Keywords or Category is missing
+    print("Dropping rows with missing Keywords or Category...")
+    data.dropna(subset=['Keywords', 'Category'], inplace=True)
+
+    # Clean the Keywords column
+    print("Cleaning the Keywords column...")
+    data['Keywords'] = data['Keywords'].apply(lambda x: ' '.join(x.split(', ')))
+
+    # Encode the Category column as labels
+    print("Encoding the Category column as numerical labels...")
+    label_encoder = LabelEncoder()
+    data['Category_Label'] = label_encoder.fit_transform(data['Category'])
+
+    # Vectorize the Keywords column using TF-IDF
+    print("Vectorizing the Keywords column using TF-IDF...")
+    vectorizer = TfidfVectorizer(ngram_range=(1, 2))
+    X = vectorizer.fit_transform(data['Keywords'])
+    y = data['Category_Label']
+
+    # Visualize class distribution before balancing
+    print("\nClass distribution before balancing:")
+    print(pd.Series(y).value_counts())
+    visualize_class_distribution(pd.Series(y), title="Class Distribution Before Balancing")
+
+    # Ask the user which imbalancing technique to use
+    print("\nWhich imbalancing technique would you like to use?")
+    print("[1] SMOTE")
+    print("[2] Random Oversampling")
+    choice = input("Enter 1 or 2: ").strip()
+
+    if choice == "1":
+        print("\nBalancing the dataset using SMOTE...")
+        smote = SMOTE(random_state=42)
+        X_balanced, y_balanced = smote.fit_resample(X, y)
+    elif choice == "2":
+        print("\nBalancing the dataset using Random Oversampling...")
+        ros = RandomOverSampler(random_state=42)
+        X_balanced, y_balanced = ros.fit_resample(X, y)
+    else:
+        print("Invalid choice. Exiting...")
+        exit()
+
+    # Visualize class distribution after balancing
+    print("\nClass distribution after balancing:")
+    print(pd.Series(y_balanced).value_counts())
+    visualize_class_distribution(pd.Series(y_balanced), title="Class Distribution After Balancing")
+
+    return X_balanced, y_balanced
+
+# Function to visualize class distribution
+def visualize_class_distribution(y, title):
+    plt.figure(figsize=(8, 6))
+    y.value_counts().plot(kind="bar", color="skyblue")
+    plt.title(title)
+    plt.xlabel("Class")
+    plt.ylabel("Count")
+    plt.xticks(rotation=45)
+    plt.show()
+
+# Function to train Random Forest
+def train_random_forest(X, y):
+    print("\nTraining the Random Forest Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = RandomForestClassifier(random_state=42)
+    classifier.fit(X_train, y_train)
+
+    evaluate_model(classifier, X_test, y_test, "random_forest.pkl")
+
+# Function to train Logistic Regression
+def train_logistic_regression(X, y):
+    print("\nTraining the Logistic Regression Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = LogisticRegression(random_state=42, max_iter=1000)
+    classifier.fit(X_train, y_train)
+
+    evaluate_model(classifier, X_test, y_test, "logistic_regression.pkl")
+
+# Function to evaluate the model
+def evaluate_model(classifier, X_test, y_test, model_filename):
+    print("\nEvaluating the model...")
+    y_pred = classifier.predict(X_test)
+    print("\nClassification Report:\n", classification_report(y_test, y_pred))
+    print("Accuracy Score:", accuracy_score(y_test, y_pred))
+
+    # Display the confusion matrix
+    print("\nConfusion Matrix:")
+    cm = confusion_matrix(y_test, y_pred)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot(cmap=plt.cm.Blues, xticks_rotation=45)
+    plt.title("Confusion Matrix")
+    plt.show()
+
+    # Save the trained model
+    joblib.dump(classifier, model_filename)
+    print(f"\nModel saved as {model_filename}.")
+
+# Main function
+if __name__ == "__main__":
+    # Input CSV file path
+    input_csv = "output_keywords.csv"  # Ensure this file exists
+
+    # Preprocess the data
+    X_balanced, y_balanced = preprocess_data(input_csv)
+
+    # Ask the user which model to train
+    print("\nWhich model would you like to train?")
+    print("[1] Random Forest")
+    print("[2] Logistic Regression")
+    choice = input("Enter 1 or 2: ").strip()
+
+    if choice == "1":
+        train_random_forest(X_balanced, y_balanced)
+    elif choice == "2":
+        train_logistic_regression(X_balanced, y_balanced)
+    else:
+        print("Invalid choice. Exiting...")
+        exit()
