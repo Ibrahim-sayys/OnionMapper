@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
+from sklearn.mixture import GaussianMixture
 from sklearn.metrics import silhouette_score
 import joblib
 
@@ -53,26 +54,42 @@ def train_kmeans(X, n_clusters=6):
     return kmeans
 
 
+# Function to train Gaussian Mixture Model (GMM)
+def train_gmm(X, n_clusters=6):
+    print(f"\nTraining GMM with {n_clusters} components...")
+    gmm = GaussianMixture(n_components=n_clusters, random_state=42)
+    gmm.fit(X.toarray())  # Convert sparse matrix to dense for GMM
+
+    # Save the trained GMM model
+    joblib.dump(gmm, "gmm_model.pkl")
+    print("GMM model saved as 'gmm_model.pkl'.")
+
+    return gmm
+
+
 # Function to validate clusters
-def validate_clusters(X, kmeans):
+def validate_clusters(X, model, is_gmm=False):
     print("\nValidating clusters...")
+
+    # Get cluster labels
+    labels = model.predict(X.toarray()) if is_gmm else model.labels_
 
     # Calculate Silhouette Score
     if X.shape[0] > 1:  # Ensure enough data points for silhouette evaluation
-        silhouette_avg = silhouette_score(X, kmeans.labels_)
+        silhouette_avg = silhouette_score(X, labels)
         print(f"Silhouette Score: {silhouette_avg:.4f} (Higher is better, range -1 to 1)")
     else:
         print("Not enough data points to compute Silhouette Score.")
 
     # Visualize cluster sizes
-    cluster_sizes = pd.Series(kmeans.labels_).value_counts().sort_index()
+    cluster_sizes = pd.Series(labels).value_counts().sort_index()
     plt.figure(figsize=(8, 6))
     cluster_sizes.plot(kind="bar", color="skyblue")
     plt.title("Cluster Sizes")
     plt.xlabel("Cluster")
     plt.ylabel("Number of Points")
     plt.xticks(rotation=0)
-    #plt.show()
+    plt.show()
 
 
 # Main function
@@ -83,8 +100,19 @@ if __name__ == "__main__":
     # Preprocess the data
     X, data = preprocess_data(input_csv)
 
-    # Train the K-Means model
-    kmeans = train_kmeans(X, n_clusters=6)
+    # Menu to select clustering algorithm
+    print("\nSelect the clustering algorithm:")
+    print("1. K-Means")
+    print("2. Gaussian Mixture Model (GMM)")
+    choice = input("Enter your choice (1 or 2): ").strip()
 
-    # Validate the clusters
-    validate_clusters(X, kmeans)
+    if choice == "1":
+        # Train and validate K-Means
+        kmeans = train_kmeans(X, n_clusters=6)
+        validate_clusters(X, kmeans)
+    elif choice == "2":
+        # Train and validate GMM
+        gmm = train_gmm(X, n_clusters=6)
+        validate_clusters(X, gmm, is_gmm=True)
+    else:
+        print("Invalid choice! Please run the program again and select 1 or 2.")
