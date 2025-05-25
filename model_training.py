@@ -1,78 +1,102 @@
-import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.naive_bayes import MultinomialNB
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
-from sklearn.preprocessing import LabelEncoder
-from imblearn.over_sampling import SMOTE, RandomOverSampler
 import joblib
 
-# Function to preprocess the dataset
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import LabelEncoder
+from imblearn.over_sampling import SMOTE, RandomOverSampler
+import pandas as pd
+
 def preprocess_data(input_csv):
     print("Loading dataset...")
     data = pd.read_csv(input_csv)
 
-    # Drop the 'Urls' column
-    if 'Urls' in data.columns:
-        print("Dropping the 'Urls' column")
-        data.drop(columns=['Urls'], inplace=True)
+    # Standardize column names
+    data.columns = data.columns.str.strip().str.lower()
 
-    # Shuffle the dataset to randomize the rows
+    # Drop the 'urls' column if it exists
+    if 'urls' in data.columns:
+        print("Dropping the 'urls' column...")
+        data.drop(columns=['urls'], inplace=True)
+
+    # Shuffle the dataset
     print("Shuffling the dataset...")
     data = data.sample(frac=1, random_state=42).reset_index(drop=True)
 
-    # Drop rows where Keywords or Category is missing
-    print("Dropping rows with missing Keywords or Category...")
-    data.dropna(subset=['Keywords', 'Category'], inplace=True)
+    # Select only keyword columns (exclude freq columns)
+    keyword_cols = [col for col in data.columns if col.startswith('keyword') and not col.startswith('freq')]
 
-    # Clean the Keywords column
-    print("Cleaning the Keywords column...")
-    data['Keywords'] = data['Keywords'].apply(lambda x: ' '.join(x.split(', ')))
+    if not keyword_cols:
+        raise ValueError("No keyword columns found!")
 
-    # Encode the Category column as labels
-    print("Encoding the Category column as numerical labels...")
+    # Treat empty strings in keyword columns as NaN
+    for col in keyword_cols:
+        data[col] = data[col].astype(str).str.strip().str.lower().replace('', pd.NA)
+
+    # Clean category
+    data['category'] = data['category'].astype(str).str.strip().str.lower()
+
+    # Count missing values before filling
+    total_missing_before = data[keyword_cols].isna().sum().sum()
+    print(f"\n Total missing (empty) keyword values before filling: {total_missing_before}")
+
+    # Fill missing keyword columns using mode per category
+    for col in keyword_cols:
+        data[col] = data.groupby('category')[col].transform(
+            lambda x: x.fillna(x.mode().iloc[0]) if not x.mode().empty else x
+        )
+
+    total_missing_after = data[keyword_cols].isna().sum().sum()
+    print(f" Total missing keyword values after filling: {total_missing_after}")
+    print(f"Total filled: {total_missing_before - total_missing_after}\n")
+
+    # Combine all keyword columns into one
+    print(" Combining keyword columns into a single text column...")
+    data['Keywords'] = data[keyword_cols].apply(lambda row: ' '.join(row.dropna().astype(str)), axis=1)
+
+    # Encode category labels
+    print("Encoding category labels...")
     label_encoder = LabelEncoder()
-    data['Category_Label'] = label_encoder.fit_transform(data['Category'])
+    data['category_label'] = label_encoder.fit_transform(data['category'])
 
-    # Vectorize the Keywords column using TF-IDF
-    print("Vectorizing the Keywords column using TF-IDF...")
+    # TF-IDF Vectorization
+    print(" Vectorizing keywords using TF-IDF...")
     vectorizer = TfidfVectorizer(ngram_range=(1, 2))
     X = vectorizer.fit_transform(data['Keywords'])
-    y = data['Category_Label']
+    y = data['category_label']
 
-    # Visualize class distribution before balancing
-    print("\nClass distribution before balancing:")
+    # Show original class distribution
+    print("\n Class distribution before balancing:")
     print(pd.Series(y).value_counts())
-    visualize_class_distribution(pd.Series(y), title="Class Distribution Before Balancing")
 
-    # Ask the user which imbalancing technique to use
-    print("\nWhich imbalancing technique would you like to use?")
+    # Ask user for balancing technique
+    print("\nWhich balancing technique would you like to use?")
     print("[1] SMOTE")
     print("[2] Random Oversampling")
     choice = input("Enter 1 or 2: ").strip()
 
     if choice == "1":
-        print("\nBalancing the dataset using SMOTE...")
-        smote = SMOTE(random_state=42)
-        X_balanced, y_balanced = smote.fit_resample(X, y)
+        print(" Applying SMOTE balancing...")
+        X_balanced, y_balanced = SMOTE(random_state=42).fit_resample(X, y)
     elif choice == "2":
-        print("\nBalancing the dataset using Random Oversampling...")
-        ros = RandomOverSampler(random_state=42)
-        X_balanced, y_balanced = ros.fit_resample(X, y)
+        print("Applying Random Oversampling...")
+        X_balanced, y_balanced = RandomOverSampler(random_state=42).fit_resample(X, y)
     else:
-        print("Invalid choice. Exiting...")
+        print(" Invalid choice. Exiting...")
         exit()
 
-    # Visualize class distribution after balancing
-    print("\nClass distribution after balancing:")
+    # Show new class distribution
+    print("\n Class distribution after balancing:")
     print(pd.Series(y_balanced).value_counts())
-    visualize_class_distribution(pd.Series(y_balanced), title="Class Distribution After Balancing")
 
-    return X_balanced, y_balanced
+    return X_balanced, y_balanced, label_encoder, vectorizer
+
 
 # Function to visualize class distribution
 def visualize_class_distribution(y, title):
@@ -83,104 +107,99 @@ def visualize_class_distribution(y, title):
     plt.ylabel("Count")
     plt.xticks(rotation=45)
     #plt.show()
+# ... [keep all previous imports and code unchanged above this point]
 
-# Function to train Random Forest
-def train_random_forest(X, y):
-    print("\nTraining the Random Forest Classifier...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    classifier = RandomForestClassifier(random_state=42)
-    classifier.fit(X_train, y_train)
-
-    evaluate_model(classifier, X_test, y_test, "random_forest.pkl")
-
-# Function to train Naive Bayes
-def train_naive_bayes(X, y):
-    print("\nTraining the Naive Bayes Classifier...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    classifier = MultinomialNB()  # Multinomial Naive Bayes for text data
-    classifier.fit(X_train, y_train)
-
-    evaluate_model(classifier, X_test, y_test, "naive_bayes.pkl")
-
-# Function to train XGBoost
-def train_xgboost(X, y):
-    print("\nTraining the XGBoost Classifier...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    classifier = XGBClassifier(random_state=42, n_estimators=100, learning_rate=0.1, max_depth=6)
-    classifier.fit(X_train, y_train)
-
-    evaluate_model(classifier, X_test, y_test, "xgboost.pkl")
-
-# Function to train CatBoost
-def train_catboost(X, y):
-    print("\nTraining the CatBoost Classifier...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    classifier = CatBoostClassifier(random_state=42, iterations=100, learning_rate=0.1, depth=6, verbose=False)  # Use 'False' instead of 0
-    classifier.fit(X_train, y_train)
-
-    evaluate_model(classifier, X_test, y_test, "catboost.pkl")
-
-# Function to train Stochastic Gradient Boosting
-def train_stochastic_gradient_boosting(X, y):
-    print("\nTraining the Stochastic Gradient Boosting Classifier...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    classifier = GradientBoostingClassifier(
-        n_estimators=100,
-        learning_rate=0.1,
-        max_depth=3,
-        subsample=0.8,  # Enables stochastic behavior
-        random_state=42
-    )
-    classifier.fit(X_train, y_train)
-
-    evaluate_model(classifier, X_test, y_test, "stochastic_gradient_boosting.pkl")
-
-# Function to evaluate the model
-def evaluate_model(classifier, X_test, y_test, model_filename):
+# Modified evaluate_model function to accept save_model flag
+def evaluate_model(classifier, X_test, y_test, model_filename, save_model):  #  Added save_model parameter
     print("\nEvaluating the model...")
     y_pred = classifier.predict(X_test)
     print("\nClassification Report:\n", classification_report(y_test, y_pred))
     print("Accuracy Score:", accuracy_score(y_test, y_pred))
 
-    # Display the confusion matrix
     print("\nConfusion Matrix:")
     cm = confusion_matrix(y_test, y_pred)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot(cmap=plt.cm.Blues, xticks_rotation=45)
     plt.title("Confusion Matrix")
-    #plt.show()
+    plt.show()
 
-    # Save the trained model
-    joblib.dump(classifier, model_filename)
-    print(f"\nModel saved as {model_filename}.")
+    if save_model:  # Save model only if user wants
+        joblib.dump(classifier, model_filename)
+        print(f"\nModel saved as {model_filename}.")
 
-# Main function
+# Updated all train functions to include save_model parameter
+def train_random_forest(X, y, save_model):
+    print("\nTraining the Random Forest Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = RandomForestClassifier(random_state=42)
+    classifier.fit(X_train, y_train)
+    evaluate_model(classifier, X_test, y_test, "random_forest.pkl", save_model)
+
+def train_naive_bayes(X, y, save_model):
+    print("\nTraining the Naive Bayes Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = MultinomialNB()
+    classifier.fit(X_train, y_train)
+    evaluate_model(classifier, X_test, y_test, "naive_bayes.pkl", save_model)
+
+def train_xgboost(X, y, save_model):
+    print("\nTraining the XGBoost Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = XGBClassifier(random_state=42, n_estimators=100, learning_rate=0.1, max_depth=6)
+    classifier.fit(X_train, y_train)
+    evaluate_model(classifier, X_test, y_test, "xgboost.pkl", save_model)
+
+def train_catboost(X, y, save_model):
+    print("\nTraining the CatBoost Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = CatBoostClassifier(random_state=42, iterations=100, learning_rate=0.1, depth=6, verbose=False)
+    classifier.fit(X_train, y_train)
+    evaluate_model(classifier, X_test, y_test, "catboost.pkl", save_model)
+
+def train_stochastic_gradient_boosting(X, y, save_model):
+    print("\nTraining the Stochastic Gradient Boosting Classifier...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    classifier = GradientBoostingClassifier(
+        n_estimators=100, learning_rate=0.1, max_depth=3, subsample=0.8, random_state=42
+    )
+    classifier.fit(X_train, y_train)
+    evaluate_model(classifier, X_test, y_test, "stochastic_gradient_boosting.pkl", save_model)
+
+
+# Main loop with rerun support
 if __name__ == "__main__":
-    # Input CSV file path
-    input_csv = "output_keywords.csv"  # Ensure this file exists
+    while True:  #  Added loop for rerun
+        input_csv = "output_keywords.csv"
+        X_balanced, y_balanced, label_encoder, vectorizer = preprocess_data(input_csv)
 
-    # Preprocess the data
-    X_balanced, y_balanced = preprocess_data(input_csv)
+        print("\nWhich model would you like to train?")
+        print("[1] Random Forest")
+        print("[2] Naive Bayes")
+        print("[3] XGBoost")
+        print("[4] CatBoost")
+        print("[5] Stochastic Gradient Boosting")
+        choice = input("Enter 1, 2, 3, 4 or 5: ").strip()
 
-    # Ask the user which model to train
-    print("\nWhich model would you like to train?")
-    print("[1] Random Forest")
-    print("[2] Naive Bayes")
-    print("[3] XGBoost")
-    print("[4] CatBoost")
-    print("[5] Stochastic Gradient Boosting")  # Added this option
-    choice = input("Enter 1, 2, 3, 4 or 5: ").strip()
+        # Ask user if they want to save the model
+        save_prompt = input("\n Do you want to save the model as a pickle file? (yes/no): ").strip().lower()
+        save_model = save_prompt == "yes"
 
-    if choice == "1":
-        train_random_forest(X_balanced, y_balanced)
-    elif choice == "2":
-        train_naive_bayes(X_balanced, y_balanced)
-    elif choice == "3":
-        train_xgboost(X_balanced, y_balanced)
-    elif choice == "4":
-        train_catboost(X_balanced, y_balanced)
-    elif choice == "5":
-        train_stochastic_gradient_boosting(X_balanced, y_balanced)
-    else:
-        print("Invalid choice. Exiting...")
-        exit()
+        if choice == "1":
+            train_random_forest(X_balanced, y_balanced, save_model)
+        elif choice == "2":
+            train_naive_bayes(X_balanced, y_balanced, save_model)
+        elif choice == "3":
+            train_xgboost(X_balanced, y_balanced, save_model)
+        elif choice == "4":
+            train_catboost(X_balanced, y_balanced, save_model)
+        elif choice == "5":
+            train_stochastic_gradient_boosting(X_balanced, y_balanced, save_model)
+        else:
+            print("Invalid choice. Exiting...")
+            exit()
+
+        #  Ask if user wants to run again
+        rerun = input("\n Do you want to run the script again? (yes/no): ").strip().lower()
+        if rerun != "yes":
+            print("Exiting. Have a great day!")
+            break

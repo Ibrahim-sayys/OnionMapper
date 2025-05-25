@@ -5,10 +5,6 @@ from collections import Counter
 from bs4 import BeautifulSoup
 import os
 from nltk.corpus import stopwords
-import nltk
-
-# Ensure stopwords are downloaded (only needs to be run once)
-# nltk.download('stopwords')
 
 # Define proxy settings for Tor
 PROXIES = {
@@ -17,81 +13,75 @@ PROXIES = {
 }
 
 
-# Function to extract text from HTML content using BeautifulSoup
 def extract_text_from_html(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
-
-    # Remove script and style elements to avoid irrelevant content
     for script_or_style in soup(['script', 'style']):
         script_or_style.decompose()
-
-    # Extract text from the entire page
     full_text = soup.get_text(separator=' ')
-
-    # Clean up the text by removing extra whitespace
     clean_text = ' '.join(full_text.split())
     return clean_text
 
 
-# Function to extract keywords from the text
-def extract_keywords(text, num_keywords=10):
-    stop_words = set(stopwords.words('english'))  # Get predefined English stopwords
-    words = re.findall(r'\b[a-zA-Z]{4,}\b', text.lower())  # Match words with 4 or more letters
-    filtered_words = [word for word in words if word not in stop_words]  # Remove stopwords
+def extract_keywords_with_frequency(text, num_keywords=10):
+    stop_words = set(stopwords.words('english'))
+    words = re.findall(r'\b[a-zA-Z]{4,}\b', text.lower())
+    filtered_words = [word for word in words if word not in stop_words]
     word_counts = Counter(filtered_words)
-    return [word for word, _ in word_counts.most_common(num_keywords)]  # Return only the keywords
+    return word_counts.most_common(num_keywords)
 
 
-# Function to process URLs from input CSV and write results to output CSV
-def process_urls(input_csv, output_csv):
-    # Ensure the input file exists
+def process_urls(input_csv, output_csv, top_n_keywords=10):
     if not os.path.exists(input_csv):
-        print(f"Error: Input file '{input_csv}' not found! Please provide a valid input file.")
+        print(f"Error: Input file '{input_csv}' not found!")
         return
 
-    with open(input_csv, 'r', encoding='utf-8-sig') as infile, open(output_csv, 'w', encoding='utf-8',
-                                                                    newline='') as outfile:
+    with open(input_csv, 'r', encoding='utf-8-sig') as infile, open(output_csv, 'w', encoding='utf-8', newline='') as outfile:
         csv_reader = csv.reader(infile)
+        rows = list(csv_reader)
+        if not rows:
+            print(f"Error: Input file '{input_csv}' is empty.")
+            return
+
+        header = rows[0]
+        data_rows = rows[1:]
+
+        # Build extended header: keyword1, freq1, keyword2, freq2, ...
+        keyword_headers = []
+        for i in range(1, top_n_keywords + 1):
+            keyword_headers.append(f'keyword{i}')
+            keyword_headers.append(f'freq{i}')
+        extended_header = header + keyword_headers
+
         csv_writer = csv.writer(outfile)
+        csv_writer.writerow(extended_header)
 
-        # Write header row to the output CSV
-        header = next(csv_reader)  # Read the header row
-        csv_writer.writerow(header)  # Write the header row as-is
+        for index, row in enumerate(data_rows, start=1):
+            url = row[0].strip()
+            print(f"Processing link #{index}: {url}")
 
-        # Process each URL in the input CSV
-        for index, row in enumerate(csv_reader, start=1):  # Add a counter with enumerate
-            url = row[0].strip()  # First column: URL
-            if not url:  # Skip empty rows
-                csv_writer.writerow(row)  # Write the row as-is if URL is missing
-                continue
+            keyword_freq_pairs = ["" for _ in range(top_n_keywords * 2)]
 
-            print(f"Processing link #{index}: {url}")  # Output the link number
+            if url:
+                try:
+                    response = requests.get(url, proxies=PROXIES, timeout=30)
+                    if response.status_code == 200:
+                        clean_text = extract_text_from_html(response.text)
+                        top_keywords = extract_keywords_with_frequency(clean_text, top_n_keywords)
 
-            try:
-                # Perform GET request with Tor proxy
-                response = requests.get(url, proxies=PROXIES, timeout=30)
-                if response.status_code == 200:
-                    # Extract and process content
-                    clean_text = extract_text_from_html(response.text)
-                    keywords = extract_keywords(clean_text, num_keywords=10)
+                        for i, (keyword, freq) in enumerate(top_keywords):
+                            keyword_freq_pairs[i * 2] = keyword
+                            keyword_freq_pairs[i * 2 + 1] = str(freq)
+                    else:
+                        print(f"Failed to fetch {url}: HTTP {response.status_code}")
+                except requests.exceptions.RequestException:
+                    print(f"Error fetching {url}, marking keywords as blank.")
 
-                    # Join keywords into a comma-separated string
-                    row[1] = ', '.join(keywords)  # Add keywords to the second column
-                else:
-                    print(f"Failed to fetch {url}: HTTP {response.status_code}")
-                    row[1] = 'down, offline, not reachable'  # Fallback keywords for HTTP errors
-            except requests.exceptions.RequestException as e:
-                # Fallback keywords for connection errors
-                row[1] = 'down, offline, not reachable'
+            complete_row = row + keyword_freq_pairs
+            csv_writer.writerow(complete_row)
 
-            csv_writer.writerow(row)  # Write the updated row to the output CSV
-    
+    print(f"\nKeyword extraction completed. Results saved to '{output_csv}'.")
 
 if __name__ == "__main__":
-    # Define input and output CSV file paths
-    input_csv = "input_url.csv"  # Ensure this file exists
+    input_csv = "input_url.csv"
     output_csv = "output_keywords.csv"
-
-    # Process URLs and extract keywords
     process_urls(input_csv, output_csv)
-    print(f"Keyword extraction completed. Results saved to {output_csv}.")
