@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Onion URL Category Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px auto;
+            max-width: 600px;
+            padding: 0 20px;
+            background: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        form {
+            margin-bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1f6391;
+        }
+        .result {
+            background: #e8f0fe;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .error {
+            background: #fce4e4;
+            color: #b00020;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .keywords {
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Onion URL Category Predictor</h1>
+
+    <form method="POST" action="/">
+        <label for="onion_url">Enter Onion URL:</label>
+        <input type="text" id="onion_url" name="onion_url" placeholder="e.g. abcdefg1234567.onion" required />
+        <button type="submit">Predict Category</button>
+    </form>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if category %}
+        <div class="result">
+            <strong>Predicted Category:</strong> {{ category }}
+            {% if extracted_keywords %}
+            <p class="keywords">Keywords used: {{ extracted_keywords }}</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</body>
+</html>

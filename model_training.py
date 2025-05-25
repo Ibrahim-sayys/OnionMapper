@@ -6,8 +6,6 @@ from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 import joblib
-
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE, RandomOverSampler
@@ -65,11 +63,17 @@ def preprocess_data(input_csv):
     label_encoder = LabelEncoder()
     data['category_label'] = label_encoder.fit_transform(data['category'])
 
+    joblib.dump(label_encoder, "label_encoder.pkl")
+    print("LabelEncoder saved as label_encoder.pkl.")
+
     # TF-IDF Vectorization
     print(" Vectorizing keywords using TF-IDF...")
     vectorizer = TfidfVectorizer(ngram_range=(1, 2))
     X = vectorizer.fit_transform(data['Keywords'])
     y = data['category_label']
+
+    joblib.dump(vectorizer, "vectorizer.pkl")
+    print("Vectorizer saved as vectorizer.pkl.")
 
     # Show original class distribution
     print("\n Class distribution before balancing:")
