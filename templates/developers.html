@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}About Developers - Onion Mapper{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="card shadow" style="margin-top:60px; background: transparent; border: none;">
+        <h1 class="text-center" style="color:#00e1ff; font-family:'Montserrat',sans-serif; font-weight:700; margin-bottom:42px;">
+            About the Developers
+        </h1>
+        <div class="row justify-content-center">
+            <!-- Developer 1 Card -->
+            <div class="col-lg-6 d-flex justify-content-end">
+                <div class="dev-big-card dev-slide-in-left">
+                    <div class="dev-img-container">
+                        <img src="/static/ibrahim.png" alt="Syed Muhammad Ibrahim" class="dev-big-photo-rect" />
+                    </div>
+                    <div class="dev-big-info">
+                        <h2>Syed Muhammad Ibrahim</h2>
+                        <p>Machine Learning | Web Developer</p>
+                        <div class="dev-links">
+                            <a href="https://www.linkedin.com/in/the-ibrahim" target="_blank" title="LinkedIn">
+                                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn" />
+                            </a>
+                            <a href="https://github.com/Ibrahim-sayys" target="_blank" title="GitHub">
+                                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub" />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Developer 2 Card -->
+            <div class="col-lg-6 d-flex justify-content-start">
+                <div class="dev-big-card dev-slide-in-right">
+                    <div class="dev-img-container">
+                        <img src="/static/hassan_improved.png" alt="Hassan Arshad" class="dev-big-photo-rect" />
+                    </div>
+                    <div class="dev-big-info">
+                        <h2>Hassan Arshad</h2>
+                        <p>Machine Learning | Backend Developer</p>
+                        <div class="dev-links">
+                            <a href="https://www.linkedin.com/in/muhammad-hassan-arshad" target="_blank" title="LinkedIn">
+                                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn" />
+                            </a>
+                            <a href="https://github.com/MHassanAr" target="_blank" title="GitHub">
+                                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub" />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Dev big card styles */
+.dev-big-card {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(120deg,#101825f3 80%, #00e1ff15 100%);
+    border-radius: 25px;
+    box-shadow: 0 6px 40px #00e1ff29, 0 1.5px 7px #00e1ff19;
+    margin: 24px 0 24px 0;
+    padding: 34px 38px;
+    min-width: 340px;
+    max-width: 650px;
+    width: 100%;
+    opacity: 0;
+    transform: translateX(0);
+    transition: box-shadow 0.3s, background 0.22s;
+    border: 2px solid #00e1ff46;
+    overflow: hidden;
+}
+.dev-big-card:hover {
+    box-shadow: 0 16px 52px #00e1ff44, 0 1.5px 7px #00ffb422;
+    background: linear-gradient(120deg,#101825f9 50%, #00e1ff22 100%);
+}
+.dev-img-container {
+    flex-shrink: 0;
+    margin-right: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+.dev-big-photo-rect {
+    width: 185px;
+    height: 225px;
+    object-fit: cover;
+    border-radius: 18px; /* Slightly rounded corners, not circular */
+    /* REMOVED: background, border, and box-shadow */
+    /* background: #233050; */
+    /* box-shadow: 0 2px 18px #00e1ff33; */
+    /* border: 5px solid #00e1ff; */
+    transition: border 0.3s;
+    display: block;
+}
+.dev-big-card:hover .dev-big-photo-rect {
+    /* No border on hover */
+}
+.dev-big-info h2 {
+    font-size: 1.35em;
+    margin-bottom: 6px;
+    color: #00e1ff;
+    font-family: 'Montserrat',sans-serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s 0.2s, transform 0.6s 0.2s;
+    word-break: break-word;
+    line-height: 1.18;
+    max-width: 95%;
+}
+.dev-big-info p {
+    color: #b1bdd7;
+    font-size: 1.08em;
+    margin-bottom: 15px;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s 0.32s, transform 0.6s 0.32s;
+}
+.dev-links {
+    margin-top: 3px;
+    display: flex;
+    gap: 16px;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s 0.44s, transform 0.6s 0.44s;
+}
+.dev-links a img {
+    width: 35px;
+    height: 35px;
+    /* Make SVG icons white */
+    filter: brightness(0) invert(1) drop-shadow(0 2px 6px #00e1ff33);
+    transition: filter 0.2s;
+}
+.dev-links a:hover img {
+    filter: brightness(0) invert(1) drop-shadow(0 4px 18px #00ffb4bb);
+}
+
+/* Entrance Animations */
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-200px);}
+    to   { opacity: 1; transform: translateX(0);}
+}
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(200px);}
+    to   { opacity: 1; transform: translateX(0);}
+}
+.dev-slide-in-left {
+    animation: slideInLeft 1s cubic-bezier(.62,-0.02,.46,1.14) forwards;
+    animation-delay: 0.24s;
+}
+.dev-slide-in-right {
+    animation: slideInRight 1s cubic-bezier(.62,-0.02,.46,1.14) forwards;
+    animation-delay: 0.24s;
+}
+
+/* Control text animation after card entrance */
+.dev-big-card.animated .dev-big-info h2,
+.dev-big-card.animated .dev-big-info p,
+.dev-big-card.animated .dev-links {
+    opacity: 1;
+    transform: translateY(0);
+}
+/* Responsive */
+@media (max-width: 991px) {
+    .dev-big-card { flex-direction: column; align-items: flex-start; padding: 24px 12px; max-width: 95vw;}
+    .dev-img-container { margin: 0 0 16px 0;}
+    .dev-big-photo-rect { width: 95vw; max-width: 350px; height: 200px;}
+    .dev-big-info h2 { font-size: 1.07em; max-width: 100%; }
+}
+</style>
+<script>
+window.addEventListener("DOMContentLoaded", function(){
+    // Wait for animation to finish, then animate text in
+    setTimeout(function(){
+        let cards = document.querySelectorAll('.dev-big-card');
+        cards.forEach(function(card){
+            card.classList.add('animated');
+        });
+    }, 1100); // after slide-in
+});
+</script>
+{% endblock %}

@@ -1,169 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Onion Mapper</title>
-    <style>
-        :root {
-            --primary: #2d6cdf;
-            --primary-dark: #1946a9;
-            --accent: #4fd1c5;
-            --background: #f4f8fb;
-            --white: #fff;
-            --danger: #ff4b5c;
-            --danger-bg: #ffeaea;
-            --success: #3ecf8e;
-            --muted: #8993a4;
-        }
-        body {
-            font-family: 'Segoe UI', 'Arial', sans-serif;
-            margin: 0;
-            background: var(--background);
-            color: #282e38;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-        }
-        h1 {
-            margin: 50px 0 30px 0;
-            text-align: center;
-            color: var(--primary);
-            font-size: 2.3rem;
-            letter-spacing: 1px;
-            font-weight: 800;
-        }
-        form {
-            width: 100%;
-            max-width: 430px;
-            margin: 0 auto 22px auto;
-            background: var(--white);
-            padding: 28px 26px 22px 26px;
-            border-radius: 12px;
-            box-shadow: 0 4px 32px 0 rgba(45,108,223,0.08), 0 1.5px 5px 0 rgba(0,0,0,0.03);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        label {
-            font-weight: 600;
-            margin-bottom: 6px;
-            font-size: 1.06em;
-            color: var(--primary-dark);
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 13px 14px;
-            margin-bottom: 14px;
-            border: 1.2px solid #dbe6f3;
-            border-radius: 6px;
-            font-size: 1.07em;
-            background: #f9fbff;
-            transition: border-color 0.22s;
-        }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: #f4f8ff;
-        }
-        button {
-            background: linear-gradient(90deg, var(--primary) 60%, var(--accent) 100%);
-            color: var(--white);
-            border: none;
-            padding: 13px 0;
-            font-size: 1.1em;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 10px rgba(77, 133, 255, 0.07);
-            transition: background 0.21s, box-shadow 0.18s;
-        }
-        button:hover, button:focus {
-            background: linear-gradient(90deg, var(--primary-dark) 70%, var(--accent) 100%);
-            box-shadow: 0 3px 16px rgba(77, 133, 255, 0.10);
-        }
-        .result, .error {
-            width: 100%;
-            max-width: 430px;
-            margin: 0 auto 18px auto;
-            border-radius: 10px;
-            padding: 20px 24px 12px 24px;
-            box-sizing: border-box;
-            font-size: 1.11rem;
-            word-break: break-word;
-        }
-        .result {
-            background: linear-gradient(90deg, #e6f2ff 80%, #e3fff7 100%);
-            color: #25456b;
-            border: 1.2px solid #c7e3fa;
-            box-shadow: 0 2px 9px 0 rgba(45,108,223,0.06);
-            margin-top: 22px;
-        }
-        .error {
-            background: var(--danger-bg);
-            color: var(--danger);
-            border: 1.2px solid #ffb6bc;
-            margin-top: 22px;
-        }
-        .keywords {
-            font-style: italic;
-            color: var(--muted);
-            font-size: 1em;
-            margin-top: 8px;
-        }
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.5rem;
-            }
-            form, .result, .error {
-                max-width: 98vw;
-                padding: 14px 7vw 10px 7vw;
-            }
-        }
-        .footer {
-            margin: 35px auto 0 auto;
-            text-align: center;
-            color: var(--muted);
-            font-size: 0.98em;
-            letter-spacing: 0.04em;
-        }
-        .footer a {
-            color: var(--primary-dark);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .footer a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <h1>Onion Mapper</h1>
-
-    <form method="POST" action="/">
-    <label for="onion_url">Enter Onion URL:</label>
-    <input type="text" id="onion_url" name="onion_url" placeholder="e.g. abcdefg1234567.onion" required autocomplete="off" />
-    <button type="submit">Predict Category</button>
-</form>
+{% extends "base.html" %}
+{% block title %}Onion Mapper{% endblock %}
+{% block content %}
+<div class="main-container">
+    <div class="branding">
+        <h1>Onion Mapper</h1>
+        <p>Smart .onion site classifier & categorizer using ML models.</p>
+    </div>
+    <form method="POST" action="/" class="form-card" id="main-form">
+        <div class="mb-3">
+            <label for="onion_url" class="form-label">Enter Onion URL:</label>
+            <input type="text" id="onion_url" name="onion_url" class="form-control" placeholder="e.g. abcdefg1234567.onion" required autocomplete="off" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="model">Select Model:</label>
+            <select id="model" name="model" class="form-select">
+                {% for key, name in model_choices %}
+                    <option value="{{ key }}" {% if key == selected_model %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-custom">Predict Category</button>
+    </form>
 
     {% if error %}
-        <div class="error">{{ error }}</div>
+        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     {% endif %}
 
     {% if category %}
-        <div class="result">
-            <strong>Predicted Category:</strong> {{ category }}
+        <div class="alert alert-success alert-dismissible fade show result-card mt-3" role="alert" style="border: 1.5px solid #00ffb4;">
+            <strong>Predicted Category ({{ model_choices | selectattr("0", "equalto", selected_model) | map(attribute="1") | first }}):</strong> {{ category }}
             {% if extracted_keywords %}
-            <p class="keywords">Keywords used: {{ extracted_keywords }}</p>
+                <p class="keywords">Keywords used: {{ extracted_keywords }}</p>
             {% endif %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     {% endif %}
 
     <div class="footer">
-        &copy; 2025 Onion Mapper &middot; Made by Hassan and Ibrahim &#10084;&#65039;
+        &copy; 2025 Onion Mapper  <br> Made with &#10084;&#65039; by Syed Ibrahim and Hassan Arshad
     </div>
-</body>
-</html>
+</div>
+<!-- Bootstrap 5 JS (for tabs and navbar) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Optional: If you want the About tabs to scroll into view and activate from navbar
+    function showTab(tabId) {
+        var tabTrigger = new bootstrap.Tab(document.querySelector('[data-bs-target="#' + tabId + '"]'));
+        tabTrigger.show();
+        document.getElementById(tabId).scrollIntoView({ behavior: 'smooth' });
+        event.preventDefault();
+    }
+</script>
+{% endblock %}

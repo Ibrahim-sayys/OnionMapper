@@ -63,17 +63,11 @@ def preprocess_data(input_csv):
     label_encoder = LabelEncoder()
     data['category_label'] = label_encoder.fit_transform(data['category'])
 
-    joblib.dump(label_encoder, "label_encoder.pkl")
-    print("LabelEncoder saved as label_encoder.pkl.")
-
     # TF-IDF Vectorization
     print(" Vectorizing keywords using TF-IDF...")
     vectorizer = TfidfVectorizer(ngram_range=(1, 2))
     X = vectorizer.fit_transform(data['Keywords'])
     y = data['category_label']
-
-    joblib.dump(vectorizer, "vectorizer.pkl")
-    print("Vectorizer saved as vectorizer.pkl.")
 
     # Show original class distribution
     print("\n Class distribution before balancing:")
@@ -99,22 +93,18 @@ def preprocess_data(input_csv):
     print("\n Class distribution after balancing:")
     print(pd.Series(y_balanced).value_counts())
 
+    # Return also label_encoder and vectorizer (not saved here!)
     return X_balanced, y_balanced, label_encoder, vectorizer
 
-
-# Function to visualize class distribution
 def visualize_class_distribution(y, title):
     plt.figure(figsize=(8, 6))
-    y.value_counts().plot(kind="bar", color="skyblue")
+    pd.Series(y).value_counts().plot(kind="bar", color="skyblue")
     plt.title(title)
     plt.xlabel("Class")
     plt.ylabel("Count")
     plt.xticks(rotation=45)
-    #plt.show()
-# ... [keep all previous imports and code unchanged above this point]
 
-# Modified evaluate_model function to accept save_model flag
-def evaluate_model(classifier, X_test, y_test, model_filename, save_model):  #  Added save_model parameter
+def evaluate_model(classifier, X_test, y_test, model_filename, save_model, label_encoder, vectorizer, model_prefix):
     print("\nEvaluating the model...")
     y_pred = classifier.predict(X_test)
     print("\nClassification Report:\n", classification_report(y_test, y_pred))
@@ -127,52 +117,54 @@ def evaluate_model(classifier, X_test, y_test, model_filename, save_model):  #  
     plt.title("Confusion Matrix")
     plt.show()
 
-    if save_model:  # Save model only if user wants
+    if save_model:
+        # Save model, vectorizer, and label encoder with model-specific prefixes
         joblib.dump(classifier, model_filename)
         print(f"\nModel saved as {model_filename}.")
+        joblib.dump(label_encoder, f"{model_prefix}_label_encoder.pkl")
+        print(f"LabelEncoder saved as {model_prefix}_label_encoder.pkl.")
+        joblib.dump(vectorizer, f"{model_prefix}_vectorizer.pkl")
+        print(f"Vectorizer saved as {model_prefix}_vectorizer.pkl.")
 
-# Updated all train functions to include save_model parameter
-def train_random_forest(X, y, save_model):
+def train_random_forest(X, y, save_model, label_encoder, vectorizer):
     print("\nTraining the Random Forest Classifier...")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     classifier = RandomForestClassifier(random_state=42)
     classifier.fit(X_train, y_train)
-    evaluate_model(classifier, X_test, y_test, "random_forest.pkl", save_model)
+    evaluate_model(classifier, X_test, y_test, "random_forest.pkl", save_model, label_encoder, vectorizer, "random_forest")
 
-def train_naive_bayes(X, y, save_model):
+def train_naive_bayes(X, y, save_model, label_encoder, vectorizer):
     print("\nTraining the Naive Bayes Classifier...")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     classifier = MultinomialNB()
     classifier.fit(X_train, y_train)
-    evaluate_model(classifier, X_test, y_test, "naive_bayes.pkl", save_model)
+    evaluate_model(classifier, X_test, y_test, "naive_bayes.pkl", save_model, label_encoder, vectorizer, "naive_bayes")
 
-def train_xgboost(X, y, save_model):
+def train_xgboost(X, y, save_model, label_encoder, vectorizer):
     print("\nTraining the XGBoost Classifier...")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     classifier = XGBClassifier(random_state=42, n_estimators=100, learning_rate=0.1, max_depth=6)
     classifier.fit(X_train, y_train)
-    evaluate_model(classifier, X_test, y_test, "xgboost.pkl", save_model)
+    evaluate_model(classifier, X_test, y_test, "xgboost.pkl", save_model, label_encoder, vectorizer, "xgboost")
 
-def train_catboost(X, y, save_model):
+def train_catboost(X, y, save_model, label_encoder, vectorizer):
     print("\nTraining the CatBoost Classifier...")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     classifier = CatBoostClassifier(random_state=42, iterations=100, learning_rate=0.1, depth=6, verbose=False)
     classifier.fit(X_train, y_train)
-    evaluate_model(classifier, X_test, y_test, "catboost.pkl", save_model)
+    evaluate_model(classifier, X_test, y_test, "catboost.pkl", save_model, label_encoder, vectorizer, "catboost")
 
-def train_stochastic_gradient_boosting(X, y, save_model):
+def train_stochastic_gradient_boosting(X, y, save_model, label_encoder, vectorizer):
     print("\nTraining the Stochastic Gradient Boosting Classifier...")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     classifier = GradientBoostingClassifier(
         n_estimators=100, learning_rate=0.1, max_depth=3, subsample=0.8, random_state=42
     )
     classifier.fit(X_train, y_train)
-    evaluate_model(classifier, X_test, y_test, "stochastic_gradient_boosting.pkl", save_model)
+    evaluate_model(classifier, X_test, y_test, "stochastic_gradient_boosting.pkl", save_model, label_encoder, vectorizer, "stochastic_gradient_boosting")
 
-
-# Main loop with rerun support
 if __name__ == "__main__":
-    while True:  #  Added loop for rerun
+    while True:
         input_csv = "output_keywords.csv"
         X_balanced, y_balanced, label_encoder, vectorizer = preprocess_data(input_csv)
 
@@ -184,26 +176,24 @@ if __name__ == "__main__":
         print("[5] Stochastic Gradient Boosting")
         choice = input("Enter 1, 2, 3, 4 or 5: ").strip()
 
-        # Ask user if they want to save the model
-        save_prompt = input("\n Do you want to save the model as a pickle file? (yes/no): ").strip().lower()
+        save_prompt = input("\nDo you want to save the model as a pickle file? (yes/no): ").strip().lower()
         save_model = save_prompt == "yes"
 
         if choice == "1":
-            train_random_forest(X_balanced, y_balanced, save_model)
+            train_random_forest(X_balanced, y_balanced, save_model, label_encoder, vectorizer)
         elif choice == "2":
-            train_naive_bayes(X_balanced, y_balanced, save_model)
+            train_naive_bayes(X_balanced, y_balanced, save_model, label_encoder, vectorizer)
         elif choice == "3":
-            train_xgboost(X_balanced, y_balanced, save_model)
+            train_xgboost(X_balanced, y_balanced, save_model, label_encoder, vectorizer)
         elif choice == "4":
-            train_catboost(X_balanced, y_balanced, save_model)
+            train_catboost(X_balanced, y_balanced, save_model, label_encoder, vectorizer)
         elif choice == "5":
-            train_stochastic_gradient_boosting(X_balanced, y_balanced, save_model)
+            train_stochastic_gradient_boosting(X_balanced, y_balanced, save_model, label_encoder, vectorizer)
         else:
             print("Invalid choice. Exiting...")
             exit()
 
-        #  Ask if user wants to run again
-        rerun = input("\n Do you want to run the script again? (yes/no): ").strip().lower()
+        rerun = input("\nDo you want to run the script again? (yes/no): ").strip().lower()
         if rerun != "yes":
             print("Exiting. Have a great day!")
             break
