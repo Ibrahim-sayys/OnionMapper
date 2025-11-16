@@ -5,15 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="11f6cd16-65f1-4df7-a4aa-f3118a85825d" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/OnionMapper.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/OnionMapper.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Feature_Extraction_and_Selection/feature_extraction.py" beforeDir="false" afterPath="$PROJECT_DIR$/Feature_Extraction_and_Selection/feature_extraction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model_training.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_training.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/unsupervised_model_training.py" beforeDir="false" afterPath="$PROJECT_DIR$/unsupervised_model_training.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/developers.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/developers.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,7 +61,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/ibrahim_sayys/PycharmProjects/ML_project&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/ibrahim_sayys/PycharmProjects/Genesis_tech/Orion-Collector&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -225,7 +219,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-WS-251.25410.117" />
+        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-WS-252.27397.92" />
       </set>
     </attachedChunks>
   </component>
@@ -244,6 +238,9 @@
       <workItem from="1748462000660" duration="18000" />
       <workItem from="1748631047524" duration="10682000" />
       <workItem from="1748690006536" duration="2000" />
+      <workItem from="1748721250411" duration="1748000" />
+      <workItem from="1748939346979" duration="273000" />
+      <workItem from="1763279661856" duration="137000" />
     </task>
     <servers />
   </component>
@@ -253,9 +250,10 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/ML_project$feature_selection.coverage" NAME="feature_selection Coverage Results" MODIFIED="1748328536594" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Feature_Extraction_and_Selection" />
     <SUITE FILE_PATH="coverage/ML_project$feature_extraction.coverage" NAME="feature_extraction Coverage Results" MODIFIED="1748333423446" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Feature_Extraction_and_Selection" />
+    <SUITE FILE_PATH="coverage/hassan_jpeg$app.coverage" NAME="app Coverage Results" MODIFIED="1748721270428" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ML_project$URL_fetcher_Orion_intelligence.coverage" NAME="URL_fetcher_Orion_intelligence Coverage Results" MODIFIED="1748429602594" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ML_project$model_training.coverage" NAME="model_training Coverage Results" MODIFIED="1748632475295" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/ML_project$app.coverage" NAME="app Coverage Results" MODIFIED="1748680200117" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ML_project$app.coverage" NAME="app Coverage Results" MODIFIED="1748698318348" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ML_project$unsupervised_model_training.coverage" NAME="unsupervised_model_training Coverage Results" MODIFIED="1748332232794" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
